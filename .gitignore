@@ -1,2 +1,11 @@
 sensor-server-android/bin
 sensor-server-android/gen
+
+hand-cannon/.DS_Store
+hand-cannon/Library
+hand-cannon/Temp
+hand-cannon/*.csproj
+hand-cannon/*.pidb
+hand-cannon/*.unityproj
+hand-cannon/*.sln
+hand-cannon/*.userprefs

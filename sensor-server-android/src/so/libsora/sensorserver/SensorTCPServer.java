@@ -55,7 +55,7 @@ public class SensorTCPServer implements Runnable {
                 
                 boolean running = true;
                 while(running) {
-                    String cmd = dis.readUTF();
+                    String cmd = dis.readLine();
                     running = handleCommand(cmd, dos);
                 }
                 Log.v(TAG, getTime() + "Connection Quit");
@@ -69,6 +69,7 @@ public class SensorTCPServer implements Runnable {
     }
     
     public boolean handleCommand(String cmd, DataOutputStream dos) throws IOException {
+        Log.v(TAG, cmd);
         if(cmd.equals(CMD_QUIT)) {
             return onQuit(dos);
         } else if(cmd.equals(CMD_REQUEST)) {
@@ -80,7 +81,8 @@ public class SensorTCPServer implements Runnable {
     
     public boolean onQuit(DataOutputStream dos) throws IOException {
         String msg = "quit";
-        dos.writeUTF(msg);
+        dos.writeBytes(msg);
+        dos.writeByte('\n');
         dos.flush();        
         return false;
     }
@@ -89,12 +91,14 @@ public class SensorTCPServer implements Runnable {
         float pitch = sensor.orientation[OrientationSeneor.PITCH];
         float roll = sensor.orientation[OrientationSeneor.ROLL];
         String msg = String.format("%.3f/%.3f/%.3f", yaw, pitch, roll);
-        dos.writeUTF(msg);
+        dos.writeBytes(msg);
+        dos.writeByte('\n');
         dos.flush();
         return true;
     }    
     public boolean onUnknownCmd(DataOutputStream dos) throws IOException {
-        dos.writeUTF("unknown");
+        dos.writeBytes("unknown");
+        dos.writeByte('\n');
         dos.flush();
         return true;
     }
