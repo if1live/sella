@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import android.util.Log;
 
@@ -90,7 +91,7 @@ public class SensorTCPServer implements Runnable {
         float yaw = sensor.orientation[OrientationSeneor.YAW];
         float pitch = sensor.orientation[OrientationSeneor.PITCH];
         float roll = sensor.orientation[OrientationSeneor.ROLL];
-        String msg = String.format("%.3f/%.3f/%.3f", yaw, pitch, roll);
+        String msg = String.format(Locale.KOREA, "%.3f/%.3f/%.3f", yaw, pitch, roll);
         dos.writeBytes(msg);
         dos.writeByte('\n');
         dos.flush();
@@ -105,7 +106,7 @@ public class SensorTCPServer implements Runnable {
     
     static String getTime() {
         String name = Thread.currentThread().getName();
-        SimpleDateFormat f = new SimpleDateFormat("[hh:mm:ss]");
+        SimpleDateFormat f = new SimpleDateFormat("[hh:mm:ss]", Locale.KOREA);
         return f.format(new Date()) + name;
     }
 }

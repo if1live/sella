@@ -1,5 +1,7 @@
 package so.libsora.sensorserver;
 
+import java.util.Locale;
+
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.app.Activity;
@@ -8,6 +10,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
@@ -15,7 +18,8 @@ public class MainActivity extends Activity {
     private SensorManager sensorManager;
     private TextView textView;
     private OrientationSeneor orientationSensor;
-    private SensorUpdater updater;
+    private SensorUpdater updater; 
+    private LogView logView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +40,8 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 orientationSensor.reset();
+                
+                logView.add(new LogRow("Reset"));
             }
         });
         startButton.setOnClickListener(new OnClickListener() {
@@ -43,6 +49,8 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 orientationSensor.registerListener();
                 updater.start();
+                
+                logView.add(new LogRow("Start"));
             }
         });
         stopButton.setOnClickListener(new OnClickListener() {            
@@ -50,6 +58,8 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 orientationSensor.unregisterListener();
                 updater.stop();
+                
+                logView.add(new LogRow("Stop"));
             }
         });
         
@@ -60,6 +70,10 @@ public class MainActivity extends Activity {
         
         SensorTCPServer server = new SensorTCPServer(orientationSensor);
         server.start();
+        
+        ListView listView = (ListView)findViewById(R.id.logListView);
+        logView = new LogView(this, listView);
+        
     }
 
     @Override
@@ -86,7 +100,7 @@ public class MainActivity extends Activity {
     SensorUpdaterPolicy policy = new SensorUpdaterPolicy() {
         @Override
         public void run(float yaw, float pitch, float roll) {
-            String log = String.format("%.3f, %.3f, %.3f", yaw, pitch, roll);
+            String log = String.format(Locale.KOREA, "%.3f, %.3f, %.3f", yaw, pitch, roll);
             textView.setText(log);   
         }
     };
