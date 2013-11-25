@@ -19,24 +19,23 @@ client : python common.py c 127.0.0.1
 
 u'''
 서버로 요청 패킷
-2 : protocol id
+4 : protocol id
 '''
 
 u'''
 센서 값 패킷규격(byte : desc)
-2 : protocol id,
+4 : protocol id,
 4 : sequence
 4 : yaw
 4 : pitch
 4 : roll
 '''
 
-PACKET_FORMAT_REQUEST = 'h'
-PACKET_FORMAT_SENSOR = 'hhfff'
+PACKET_FORMAT_REQUEST = 'i'
+PACKET_FORMAT_SENSOR = 'iifff'
 
 PROTOCOL_REQUEST = 0x01
 PROTOCOL_SENSOR = 0x02
-
 
 def show_help(msg=None):
 	if msg:
@@ -131,11 +130,12 @@ def client_main(ip):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	sock.sendto('test msg', (ip, PORT))
 	'''
-	HOST = "localhost"
+	HOST = ip
 	data = " ".join(sys.argv[1:])
 
 	# SOCK_DGRAM is the socket type to use for UDP sockets
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	sock.settimeout(1);
 
 	# As you can see, there is no connect() call; UDP has no connections.
 	# Instead, data is directly sent to the recipient via sendto().

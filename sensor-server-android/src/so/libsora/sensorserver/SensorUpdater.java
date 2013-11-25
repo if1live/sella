@@ -32,7 +32,7 @@ public class SensorUpdater {
         @Override
         public void run() {
             //float[] data = sensor.filteredOrientation;
-            float[] data = sensor.orientation;
+            float[] data = sensor.rawOrientation;
             float yaw = data[OrientationSeneor.YAW];
             float pitch = data[OrientationSeneor.PITCH];
             float roll = data[OrientationSeneor.ROLL];

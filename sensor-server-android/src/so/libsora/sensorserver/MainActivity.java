@@ -19,7 +19,8 @@ public class MainActivity extends Activity {
     private TextView textView;
     private OrientationSeneor orientationSensor;
     private SensorUpdater updater; 
-    private LogView logView;
+    private LogView logView;    
+    private SensorUDPServer server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +50,7 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 orientationSensor.registerListener();
                 updater.start();
+                server.start();
                 
                 logView.add(new LogRow("Start"));
             }
@@ -58,6 +60,7 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 orientationSensor.unregisterListener();
                 updater.stop();
+                server.stop();
                 
                 logView.add(new LogRow("Stop"));
             }
@@ -68,7 +71,7 @@ public class MainActivity extends Activity {
         TextView ipTextView = (TextView)findViewById(R.id.ipTextView);
         ipTextView.setText(networkHelper.getIP());
         
-        SensorTCPServer server = new SensorTCPServer(orientationSensor);
+        server = new SensorUDPServer(orientationSensor);
         server.start();
         
         ListView listView = (ListView)findViewById(R.id.logListView);
@@ -81,6 +84,7 @@ public class MainActivity extends Activity {
         super.onResume();
         orientationSensor.registerListener();
         updater.start();
+        server.start();
     }
 
     @Override
@@ -88,6 +92,7 @@ public class MainActivity extends Activity {
         super.onPause();
         orientationSensor.unregisterListener();
         updater.stop();
+        server.stop();
     }
 
     @Override
