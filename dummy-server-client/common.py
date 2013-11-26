@@ -117,6 +117,7 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
 		data = self.request[0]
 		socket = self.request[1]
 
+		print "{} wrote".format(self.client_address[0])
 		data = self.create_packet()
 		socket.sendto(data, self.client_address)
 
