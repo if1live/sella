@@ -7,7 +7,7 @@ public struct SensorValue {
 	public float roll;
 	
 	override public string ToString() {
-		return String.Format("{0} : {0}/{1}/{2}", sequence, yaw, pitch, roll);
+		return String.Format("{0} : {1}/{2}/{3}", sequence, yaw, pitch, roll);
 		
 	}
 }

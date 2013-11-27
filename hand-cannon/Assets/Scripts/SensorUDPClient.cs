@@ -19,11 +19,9 @@ public class StateObject {
 }
 
 public class SensorUDPClient : MonoBehaviour {
-	
-	PacketGenerator packetGenerator = new PacketGenerator();
-	PacketParser packetParser = new PacketParser();
 	UdpClient client;
 	
+	IPacketConverter packetConverter = new PacketConverter();
 	SensorValue? lastSensorValue = null;
 	bool running = true;
 	
@@ -58,23 +56,30 @@ public class SensorUDPClient : MonoBehaviour {
 		UdpClient client = state.c;
 		
 		int writeLength = client.EndSend(ar);
-		Debug.Log ("Send Bytes : " + writeLength);
+		//Debug.Log ("Send Bytes : " + writeLength);
 		client.BeginReceive(new AsyncCallback(RecvCallback), state);
 	}
 	
 	private void RecvCallback(IAsyncResult ar) {
 		StateObject state = (StateObject) ar.AsyncState;
 		byte[] bytes = state.c.EndReceive(ar, ref state.e);
-		Debug.Log ("Recv Bytes : " + bytes.Length);
+		//Debug.Log ("Recv Bytes : " + bytes.Length);
 		
-		SensorValue sensorVal = packetParser.HandleSensorPacket(bytes);
+		SensorPacket packet = (SensorPacket)packetConverter.ToPacket(bytes);
+		SensorValue sensorVal = new SensorValue();
+		sensorVal.sequence = packet.sequence;
+		sensorVal.yaw = packet.yaw;
+		sensorVal.pitch = packet.pitch;
+		sensorVal.roll = packet.roll;
+		
 		lastSensorValue = sensorVal;
-		//Debug.Log(sensorVal.ToString());
+		Debug.Log(sensorVal.ToString());
 	}
+	
 	
 	private void RequestSensorValue() {
 		StateObject state = new StateObject(client);
-		byte[] bytes = packetGenerator.CreateRequestPacket();
+		byte[] bytes = packetConverter.ToByte(new RequestPacket());
 		client.BeginSend(bytes, bytes.Length, new AsyncCallback(SendCallback), state);
 	}
 	
