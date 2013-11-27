@@ -145,6 +145,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 641731535}
   - 114: {fileID: 641731536}
+  - 114: {fileID: 641731537}
   m_Layer: 0
   m_Name: Sensor
   m_TagString: Untagged
@@ -176,6 +177,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   text: {fileID: 1457073282}
   cubeTransform: {fileID: 2057020457}
+--- !u!114 &641731537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 641731534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3ad3fe57a72a4648a08db51a8e9ac8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1457073281
 GameObject:
   m_ObjectHideFlags: 0
