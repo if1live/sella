@@ -8,27 +8,52 @@ using System;
 
 public class SensorUDPServer : MonoBehaviour {
 	IPacketConverter packetConverter = new PacketConverter();
-	Socket socket;
+	Socket serverSocket = null;
+	
+	// Data stream
+	private byte[] recvBuffer = new byte[1024];
+	
+	public void OnDestroy() {
+		StopServer();
+	}
+	
+	public void StopServer() {
+		if(serverSocket == null) {
+			return;
+		}
+		
+		serverSocket.Close(1);
+		serverSocket = null;
+	}
+	
+	public void RunServer() {
+		if(serverSocket != null) {
+			return;
+		}
+		
+		// Initialise the socket
+		serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+		
+		// Initialise the IPEndPoint for the server and listen on port 
+		IPEndPoint server = new IPEndPoint(IPAddress.Any, ServerConfig.PORT);
+		
+		// Associate the socket with this IP address and port
+		serverSocket.Bind(server);
+		
+		// Initialise the IPEndPoint for the clients
+        IPEndPoint clients = new IPEndPoint(IPAddress.Any, 0);
+		EndPoint epSender = (EndPoint)clients;
+		
+		// Start listening for incoming data
+		// 프로토콜 타입으로 패킷 분기하니까 clear안해도 별 문제는 없겠지만
+		// 혹시나 디버깅 하는 사태를 대비해서 clear를 넣어줬다
+		Array.Clear(recvBuffer, 0, recvBuffer.Length);
+        serverSocket.BeginReceiveFrom(recvBuffer, 0, recvBuffer.Length, SocketFlags.None, ref epSender, new AsyncCallback(RecvCallback), epSender);
+	}
+	
 	// Use this for initialization
 	void Start () {
-		Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-		socket.ReceiveTimeout = 5000;
-		IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
-		IPEndPoint endPoint = new IPEndPoint(ipAddress, ServerConfig.PORT);
-		socket.Bind(endPoint);
-	
-		byte[] recvData = new byte[1024];
-		EndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-		int recvByte = socket.ReceiveFrom(recvData, ref sender);
-		Debug.Log ("Recv Bytes : " + recvByte);
-		
-		SensorPacket sensorPacket = new SensorPacket();
-		sensorPacket.sequence = 1;
-		sensorPacket.yaw = 0.1f;
-		sensorPacket.pitch = 0.2f;
-		sensorPacket.roll = 0.3f;
-		byte[] data = packetConverter.ToByte(sensorPacket);
-		socket.SendTo(data, sender);
+		RunServer();
 	}
 	
 	// Update is called once per frame
@@ -36,20 +61,28 @@ public class SensorUDPServer : MonoBehaviour {
 	
 	}
 	
-	/*
 	private void SendCallback(IAsyncResult ar) {
-		int writeLength = socket.EndSend(ar);
-		Debug.Log ("Send Bytes : " + writeLength);
-		socket.BeginReceive(new AsyncCallback(RecvCallback), null);
+		int writeLength = serverSocket.EndSendTo(ar);
+		//Debug.Log ("Send Bytes : " + writeLength);
+		
+		IPEndPoint clients = new IPEndPoint(IPAddress.Any, 0);
+		EndPoint epSender = (EndPoint)clients;
+		Array.Clear(recvBuffer, 0, recvBuffer.Length);
+		serverSocket.BeginReceiveFrom(recvBuffer, 0, recvBuffer.Length, SocketFlags.None, ref epSender, new AsyncCallback(RecvCallback), epSender);
 	}
 	
 	private void RecvCallback(IAsyncResult ar) {
-		IPAddress ipAddress = IPAddress.Parse(ServerConfig.SERVER_IP);
-        IPEndPoint endPoint= new IPEndPoint(ipAddress, ServerConfig.PORT);
-		byte[] bytes = socket.EndReceive(
-		Debug.Log ("Recv Bytes : " + bytes.Length);
+		// Initialise the IPEndPoint for the clients
+		IPEndPoint clients = new IPEndPoint(IPAddress.Any, 0);
 		
-		RequestPacket packet = (RequestPacket)packetConverter.ToPacket(bytes);
+		// Initialise the EndPoint for the clients
+		EndPoint epSender = (EndPoint)clients;
+		
+		// Receive all data
+        int recvLength = serverSocket.EndReceiveFrom(ar, ref epSender);
+		
+		//Debug.Log ("Recv Bytes : " + recvLength);
+		RequestPacket packet = (RequestPacket)packetConverter.ToPacket(recvBuffer);
 		
 		SensorPacket sensorPacket = new SensorPacket();
 		sensorPacket.sequence = 1;
@@ -57,7 +90,6 @@ public class SensorUDPServer : MonoBehaviour {
 		sensorPacket.pitch = 0.2f;
 		sensorPacket.roll = 0.3f;
 		byte[] data = packetConverter.ToByte(sensorPacket);
-		socket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), null);
+		serverSocket.BeginSendTo(data, 0, data.Length, SocketFlags.None, epSender, new AsyncCallback(SendCallback), null);
 	}
-	*/	
 }
