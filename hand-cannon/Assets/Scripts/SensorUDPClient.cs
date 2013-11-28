@@ -7,7 +7,7 @@ using System.Threading;
 using System;
 using System.IO;
 
-// State object for reading client data asynchronously
+/*
 public class StateObject {
 	public StateObject(UdpClient client) {
 		this.c = client;
@@ -17,52 +17,76 @@ public class StateObject {
 	public UdpClient c;
 	public IPEndPoint e;
 }
+*/
 
 public class SensorUDPClient : MonoBehaviour {
-	UdpClient client;
+	UdpClient client = null;
+	bool running = false;
 	
 	IPacketConverter packetConverter = new PacketConverter();
 	SensorValue? lastSensorValue = null;
-	bool running = true;
-	
-	public SensorUDPClient() {
-		client = new UdpClient(ServerConfig.SERVER_IP, ServerConfig.PORT);
-	}
-	
 	
 	public void Start() {
+		RunClient();
 	}
 	
-	public void Pause() {
+	public void StopClient() {
+		if(client == null) {
+			return;
+		}
+		client.Close();
+		client = null;
 		running = false;
+		Debug.Log("close client");
 	}
+	public void RunClient() {
+		if(client != null) {
+			return;
+		}
+		Debug.Log("run client");
+		client = new UdpClient(ServerConfig.SERVER_IP, ServerConfig.PORT);
+		running = true;
+		RequestSensorValue();
+	}
+	
 	public void Resume() {
 		running = true;
 	}
+	public void Stop() {
+		running = false;
+	}
 	
 	public void Update() {
+	}
+	
+	public void FixedUpdate() {
+		if(running == false) {
+			return;
+		}
+		
+		if(client == null) {
+			//재접속 시도
+			client = new UdpClient(ServerConfig.SERVER_IP, ServerConfig.PORT);
+		}
+		
 		if(lastSensorValue == null) {
-			if(running) {
-				RequestSensorValue();
-			}
+			RequestSensorValue();
 		} else {
 			Debug.Log(lastSensorValue.ToString());
 			lastSensorValue = null;
 		}
 	}
 	
-	private void SendCallback(IAsyncResult ar) {
-		StateObject state = (StateObject) ar.AsyncState;
-		UdpClient client = state.c;
-		
+	private void SendCallback(IAsyncResult ar) {		
 		int writeLength = client.EndSend(ar);
 		//Debug.Log ("Send Bytes : " + writeLength);
-		client.BeginReceive(new AsyncCallback(RecvCallback), state);
+		client.BeginReceive(new AsyncCallback(RecvCallback), null);
 	}
 	
 	private void RecvCallback(IAsyncResult ar) {
-		StateObject state = (StateObject) ar.AsyncState;
-		byte[] bytes = state.c.EndReceive(ar, ref state.e);
+		IPAddress ipAddress = IPAddress.Parse(ServerConfig.SERVER_IP);
+        IPEndPoint endPoint = new IPEndPoint(ipAddress, ServerConfig.PORT);
+		byte[] bytes = client.EndReceive(ar, ref endPoint);
 		//Debug.Log ("Recv Bytes : " + bytes.Length);
 		
 		SensorPacket packet = (SensorPacket)packetConverter.ToPacket(bytes);
@@ -73,14 +97,18 @@ public class SensorUDPClient : MonoBehaviour {
 		sensorVal.roll = packet.roll;
 		
 		lastSensorValue = sensorVal;
-		Debug.Log(sensorVal.ToString());
 	}
 	
 	
 	private void RequestSensorValue() {
-		StateObject state = new StateObject(client);
 		byte[] bytes = packetConverter.ToByte(new RequestPacket());
-		client.BeginSend(bytes, bytes.Length, new AsyncCallback(SendCallback), state);
+		try {
+			client.BeginSend(bytes, bytes.Length, new AsyncCallback(SendCallback), null);
+		} catch(SocketException e) {
+			//Debug.Log(e.ToString());
+			client.Close();
+			client = null;
+		}
 	}
 	
 }
